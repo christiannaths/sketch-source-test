@@ -6,15 +6,9 @@
 
 echo "Packing Sketch sources"
 
-DIR=$(git rev-parse --show-toplevel)
+REPO_ROOT=$(git rev-parse --show-toplevel)
 
-thing() {
-  echo $1
-}
-
-# find $DIR -name '*.sketch' -exec echo "{}" \;
-
-find $DIR -name "*.sketch" | while read fname; do
+find $REPO_ROOT -name "*.sketch" | while read fname; do
   if [ -d "${fname}" ] ; then
     FILENAME=$(basename $fname)
     mv "$fname" "$fname.tmp"
