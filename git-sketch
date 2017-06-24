@@ -1,0 +1,87 @@
+#!/usr/bin/env sh
+
+version() {
+    echo "Sketch Source v0.0.1 (git plugin)"
+    echo "** This is alpha software and provides no warranty whatsoever. Use at your own risk **"
+    echo
+}
+
+usage() {
+    echo "usage: git sketch <subcommand>"
+    echo
+    echo "Available subcommands are:"
+    echo "    unpack  Extracts all .sketch files in current git repo to source folders of the same name"
+    echo "    pack    Converts all .sketch source folders back to .sketch files for use with Sketch"
+    echo
+}
+
+pack() {
+    find $GIT_SKETCH_REPODIR -name "*.sketch" | while read fname; do
+        if [ -d "${fname}" ] ; then
+            FILENAME=$(basename $fname)
+            mv "$fname" "$fname.tmp"
+            cd "$fname.tmp"
+            zip "$FILENAME" -r .
+            mv $FILENAME ../$FILENAME
+            rm -fr "$fname.tmp"
+        else
+            echo "$fname is not a directory (no-op)";
+        fi
+    done
+}
+
+unpack() {
+    find $GIT_SKETCH_REPODIR -name "*.sketch" | while read fname; do
+        if [ -f "${fname}" ] ; then
+            mv "$fname" "$fname.tmp"
+            unzip -o "$fname.tmp" -d "$fname/"
+            rm "$fname.tmp"
+
+            find "$fname" -name "*.json" | while read jsonfname; do
+                if [ -f "${jsonfname}" ] ; then
+                    touch "$jsonfname.tmp"
+                    cat "$jsonfname" | $GIT_SKETCH_WORKINGDIR/bin/jq . > "$jsonfname.tmp"
+                    mv "$jsonfname.tmp" "$jsonfname"
+                else
+                    echo "$jsonfname is not a file (no-op)" 
+                fi
+            done
+
+        else
+          echo "$fname is not a file (no-op)";
+        fi
+      
+    done
+}
+
+main() {
+    if [ "$#" -lt 1 ]; then
+        usage; exit 1
+    fi
+
+    local subcommand="$1"; shift
+
+    export GIT_SKETCH_WORKINGDIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+    export GIT_SKETCH_REPODIR=$(git rev-parse --show-toplevel)
+
+    if [ ! -e "$GIT_SKETCH_REPODIR" ]; then
+        exit 1
+    fi
+
+    case $subcommand in
+        "-h"|"--help")
+            usage; exit 0
+            ;;
+        "-v"|"--version")
+            version; exit 0
+            ;;
+        "-p"|"--pack"|"pack")
+            pack; exit 0
+            ;;
+        "-u"|"--unpack"|"unpack")
+            unpack; exit 0
+            ;;
+    esac
+}
+
+main "$@"

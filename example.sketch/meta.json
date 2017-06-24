@@ -6,7 +6,11 @@
   "pagesAndArtboards": {
     "B61C5251-2C59-40C5-98EB-73DA376A0E8C": {
       "name": "Page 1",
-      "artboards": {}
+      "artboards": {
+        "0F871556-B977-47A2-8220-FF54CB63C614": {
+          "name": "Artboard"
+        }
+      }
     }
   },
   "fonts": [],
